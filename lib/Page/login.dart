@@ -4,6 +4,9 @@ import 'package:flutter/painting.dart';
 import 'package:provider/provider.dart';
 
 import '../login_state.dart';
+import '../login_state.dart';
+import 'signup.dart';
+import 'signup.dart';
 
 class Login extends StatelessWidget {
 
@@ -29,6 +32,7 @@ class Login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var state = Provider.of<LoginState>(context);
+
     return Scaffold(
       body: state.isLoggedIn() ? Home(mensaje: mensaje) : loginForm(context),
 //      body: loginForm(),
@@ -89,16 +93,20 @@ class Login extends StatelessWidget {
       child: MaterialButton(
         minWidth: MediaQuery.of(context).size.width,
         padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-        onPressed: () async {
-          if (_key.currentState.validate()) {
-            _key.currentState.save();
-
-            Provider.of<LoginState>(context, listen: false).login();
-            String message = 'Gracias \n $_email \n $_password';
-            //Una forma correcta de llamar a otra pantalla
-            Navigator.of(context).push(Home.route(message));
+        onPressed: () async  {
+        if (_key.currentState.validate()) {
+          _key.currentState.save();
+          var prov = Provider.of<LoginState>(context, listen: false);
+          var estado = await prov.login(_email, _password);
+          if (estado) {
+            Navigator.of(context).push(Home.route(""));
+          } else {
+            print("fallo");
+            showAlert(context, "Error");
           }
-        },
+          //Una forma correcta de llamar a otra pantalla
+        }
+      },
         child: Text("Login",
             textAlign: TextAlign.center,
             style: style.copyWith(
@@ -119,7 +127,9 @@ class Login extends StatelessWidget {
         'Signup',
         style: TextStyle(color: Colors.black54),
       ),
-      onPressed: () {},
+      onPressed:  () {
+        Navigator.of(context).push(Signup.route());
+      }
     );
 
 
@@ -174,5 +184,28 @@ class Login extends StatelessWidget {
         ),
       ),
     );
+  }
+  static void showAlert(BuildContext context, String text) {
+    var alert = new AlertDialog(
+      content: Container(
+        child: Row(
+          children: <Widget>[Text(text)],
+        ),
+      ),
+      actions: <Widget>[
+        new FlatButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "OK",
+              style: TextStyle(color: Colors.blue),
+            ))
+      ],
+    );
+
+    showDialog(
+        context: context,
+        builder: (_) {
+          return alert;
+        });
   }
 }

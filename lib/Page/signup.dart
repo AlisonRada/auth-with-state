@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:authwithstate/Page/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 import 'package:authwithstate/login_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 //import '../login_state.dart';
 
@@ -14,16 +18,34 @@ class Signup extends StatelessWidget {
   new RegExp(r'^\w+[\w-\.]*\@\w+((-\w+)|(\w*))\.[a-z]{2,3}$');
 
   RegExp contRegExp = new RegExp(r'^([1-z0-1@A-Z.\s]{1,255})$');
+  RegExp contNumExp = new RegExp('[a-zA-Z]');
 
   GlobalKey<FormState> _key = GlobalKey();
 
   String _email;
   String _password;
+  String _name;
+  String _username;
+
+  static Route<dynamic> route() {
+    return MaterialPageRoute(
+      builder: (context) => Signup(),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
 
     final nameField = TextFormField(
+      validator: (text) {
+        if (text.length == 0) {
+          return "Este campo correo es requerido";
+        } else if (text.length<=3) {
+          return "El formato para nombre no es correcto";
+        }
+        return null;
+      },
       obscureText: false,
       style: style,
       decoration: InputDecoration(
@@ -32,6 +54,26 @@ class Signup extends StatelessWidget {
           hintText: "Name",
           border:
           OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
+           onSaved: (text) => _name = text,
+    );
+    final usernameField = TextFormField(
+      validator: (text) {
+        if (text.length == 0) {
+          return "Este campo correo es requerido";
+        } else if (!contNumExp.hasMatch(text)) {
+          return "El formato para nombre no es correcto";
+        }
+        return null;
+      },
+      obscureText: false,
+      style: style,
+      decoration: InputDecoration(
+          contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+          labelText: 'UserName',
+          hintText: "UserName",
+          border:
+          OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
+      onSaved: (text) => _username = text,
     );
 
     final emailField = TextFormField(
@@ -86,14 +128,19 @@ class Signup extends StatelessWidget {
       child: MaterialButton(
         minWidth: MediaQuery.of(context).size.width,
         padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-          onPressed: () {
+          onPressed: () async{
             if (_key.currentState.validate()) {
               _key.currentState.save();
-
-              Provider.of<LoginState>(context, listen: false).login();
-
+              var status= await Provider.of<LoginState>(context, listen: false).signUp(_name.trim(), _username.trim(), _email, _password);
+              print(status);
+                if(status==true) {
+                  print("Entro");
+                  Navigator.of(context).push(Home.route(""));
+                }else{
+                  print("fallo");
+                  showAlert(context, "Error");
+                };
               //Una forma correcta de llamar a otra pantalla
-              Navigator.of(context).push(Home.route(""));
             }
           },
         child: Text("Sign up",
@@ -132,6 +179,8 @@ class Signup extends StatelessWidget {
                         children: <Widget>[
                           nameField,
                           SizedBox(height: 18.0),
+                          usernameField,
+                          SizedBox(height: 18.0),
                           emailField,
                           SizedBox(height: 18.0),
                           passwordFormField,
@@ -152,5 +201,28 @@ class Signup extends StatelessWidget {
         ),
       ),
     );
+  }
+  static void showAlert(BuildContext context, String text) {
+    var alert = new AlertDialog(
+      content: Container(
+        child: Row(
+          children: <Widget>[Text(text)],
+        ),
+      ),
+      actions: <Widget>[
+        new FlatButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "OK",
+              style: TextStyle(color: Colors.blue),
+            ))
+      ],
+    );
+
+    showDialog(
+        context: context,
+        builder: (_) {
+          return alert;
+        });
   }
 }
