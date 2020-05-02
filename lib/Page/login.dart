@@ -1,11 +1,8 @@
-import 'package:authwithstate/Page/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:provider/provider.dart';
-
+import 'package:authwithstate/Page/home.dart';
 import '../login_state.dart';
-import '../login_state.dart';
-import 'signup.dart';
 import 'signup.dart';
 
 class Login extends StatelessWidget {
@@ -22,12 +19,6 @@ class Login extends StatelessWidget {
   bool _obscureText = true;
 
   GlobalKey<FormState> _key = GlobalKey();
-
-  static Route<dynamic> route() {
-    return MaterialPageRoute(
-      builder: (context) => Login(),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +90,15 @@ class Login extends StatelessWidget {
           var prov = Provider.of<LoginState>(context, listen: false);
           var estado = await prov.login(_email, _password);
           if (estado) {
-            Navigator.of(context).push(Home.route(""));
+            mensaje = "Hola, "+prov.getUserName();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Home(mensaje: mensaje),
+              ),
+            );
           } else {
-            print("fallo");
-            showAlert(context, "Error");
+            prov.showAlert(context);
           }
           //Una forma correcta de llamar a otra pantalla
         }
@@ -128,7 +124,12 @@ class Login extends StatelessWidget {
         style: TextStyle(color: Colors.black54),
       ),
       onPressed:  () {
-        Navigator.of(context).push(Signup.route());
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Signup(),
+          ),
+        );
       }
     );
 
@@ -184,28 +185,5 @@ class Login extends StatelessWidget {
         ),
       ),
     );
-  }
-  static void showAlert(BuildContext context, String text) {
-    var alert = new AlertDialog(
-      content: Container(
-        child: Row(
-          children: <Widget>[Text(text)],
-        ),
-      ),
-      actions: <Widget>[
-        new FlatButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "OK",
-              style: TextStyle(color: Colors.blue),
-            ))
-      ],
-    );
-
-    showDialog(
-        context: context,
-        builder: (_) {
-          return alert;
-        });
   }
 }

@@ -1,5 +1,4 @@
 import 'package:authwithstate/Page/home.dart';
-import 'package:authwithstate/Page/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:authwithstate/login_state.dart';
@@ -22,7 +21,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (BuildContext context) {
             var state = Provider.of<LoginState>(context);
-            state.getCredentials();
+            //state.getCredentials();
             if (state.isLoggedIn()) {
               return Home();
             } else {
