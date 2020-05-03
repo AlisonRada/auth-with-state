@@ -16,7 +16,7 @@ class Home extends StatelessWidget {
     final welcome = Padding(
       padding: EdgeInsets.all(8.0),
       child: Text(
-        mensaje ?? "Welcome",
+        mensaje ?? "Welcome again",
         style: TextStyle(fontSize: 28.0, color: Colors.black),
       ),
     );

@@ -18,7 +18,8 @@ class LoginState with ChangeNotifier {
 
   SharedPreferences prefs;
 
-  update(){
+  update() async{
+    prefs = await SharedPreferences.getInstance();
     _username = prefs.getString("username");
     _name = prefs.getString("name");
     _email = prefs.getString("email");
@@ -76,39 +77,39 @@ class LoginState with ChangeNotifier {
     _password = prefs.getString("password");
   }
 
-   signUp(name, username, email, password) async {
-     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-     _name = name;
-     _username = username;
-     _email = email;
-     _password = password;
-     Map data = {
-       'email': _email,
-       'password': _password,
-       'username': _username,
-       'name': _name
-     };
-     var response = await post("https://movil-api.herokuapp.com/signup", body: data);
-     var jsonResponse = json.decode(response.body);
-     _message = jsonResponse['error'];
-     if (response.statusCode == 200) {
-       if (jsonResponse != null) {
-         _loggedIn = true;
-         sharedPreferences.setString("token", jsonResponse['token']);
-         sharedPreferences.setString("name", jsonResponse['name']);
-         sharedPreferences.setString("username", jsonResponse['username']);
-         sharedPreferences.setString("email", jsonResponse['email']);
-         sharedPreferences.setBool("loggedIn", _loggedIn);
-         update();
-       };
-       //update();
+  signUp(name, username, email, password) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    _name = name;
+    _username = username;
+    _email = email;
+    _password = password;
+    Map data = {
+      'email': _email,
+      'password': _password,
+      'username': _username,
+      'name': _name
+    };
+    var response = await post("https://movil-api.herokuapp.com/signup", body: data);
+    var jsonResponse = json.decode(response.body);
+    _message = jsonResponse['error'];
+    if (response.statusCode == 200) {
+      if (jsonResponse != null) {
+        _loggedIn = true;
+        sharedPreferences.setString("token", jsonResponse['token']);
+        sharedPreferences.setString("name", jsonResponse['name']);
+        sharedPreferences.setString("username", jsonResponse['username']);
+        sharedPreferences.setString("email", jsonResponse['email']);
+        sharedPreferences.setBool("loggedIn", _loggedIn);
+        update();
+      };
+      //update();
 
-     }else{
-       _loggedIn=false;
-     }
-     notifyListeners();
-     return _loggedIn;
-   }
+    }else{
+      _loggedIn=false;
+    }
+    notifyListeners();
+    return _loggedIn;
+  }
 
   void showAlert(BuildContext context) {
     var alert = new AlertDialog(

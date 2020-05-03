@@ -21,7 +21,8 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (BuildContext context) {
             var state = Provider.of<LoginState>(context);
-            //state.getCredentials();
+            state.getCredentials();
+            state.update();
             if (state.isLoggedIn()) {
               return Home();
             } else {
