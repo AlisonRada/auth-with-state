@@ -6,10 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginState with ChangeNotifier {
 
-  bool _loggedIn;
+  bool _loggedIn, _loaded = false;
   String _email, _password, _name, _username, _token;
   String _message;
   bool isLoggedIn() => _loggedIn ?? false;
+  bool isLoaded() => _loaded ?? false;
   String getEmail() => _email;
   String getPassword() => _password;
   String getName() => _name;
@@ -75,6 +76,8 @@ class LoginState with ChangeNotifier {
     _loggedIn = prefs.getBool("loggedIn");
     _email = prefs.getString("email");
     _password = prefs.getString("password");
+    _loaded = true;
+    notifyListeners();
   }
 
   signUp(name, username, email, password) async {

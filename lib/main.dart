@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:authwithstate/login_state.dart';
 import 'package:authwithstate/Page/login.dart';
+import 'package:authwithstate/Page/screensplash.dart';
 
 void main() => runApp(MyApp());
 
@@ -23,10 +24,14 @@ class MyApp extends StatelessWidget {
             var state = Provider.of<LoginState>(context);
             state.getCredentials();
             state.update();
-            if (state.isLoggedIn()) {
-              return Home();
+            if (state.isLoaded()) {
+              if (state.isLoggedIn()) {
+                return Home();
+              } else {
+                return Login();
+              }
             } else {
-              return Login();
+              return SplashScreen();
             }
           },
         },
