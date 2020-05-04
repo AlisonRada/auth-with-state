@@ -170,7 +170,8 @@ class Signup extends StatelessWidget {
                       SizedBox(
                         height: 30.0,
                       ),
-                      Form(child: Column(
+                      Form(key: _key,
+                          child: Column(
                         children: <Widget>[
                           Padding(
                             padding: const EdgeInsets.all(8.0),
