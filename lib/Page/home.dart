@@ -32,10 +32,12 @@ class Home extends StatelessWidget {
     final home_btn = RaisedButton(
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [
-            Colors.pink[600],
-            Colors.pink[900],
-          ]),
+            gradient: new LinearGradient(
+              begin: Alignment.centerLeft,
+              end: new Alignment(1.0, 0.0), // 10% of the width, so there are ten blinds.
+              colors: [Colors.white, Colors.pinkAccent], // whitish to gray
+              tileMode: TileMode.repeated, // repeats the gradient over the canvas
+            ),
         ),
         padding: const EdgeInsets.all(10.0),
         child: const Text(

@@ -32,7 +32,7 @@ class Signup extends StatelessWidget {
       validator: (text) {
         if (text.length == 0) {
           return "Este campo correo es requerido";
-        } else if (text.length<=3) {
+        } else if (text.length<3) {
           return "El formato para nombre no es correcto";
         }
         return null;
@@ -45,8 +45,9 @@ class Signup extends StatelessWidget {
           hintText: "Name",
           border:
           OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
-           onSaved: (text) => _name = text,
+      onSaved: (text) => _name = text,
     );
+
     final usernameField = TextFormField(
       validator: (text) {
         if (text.length == 0) {
@@ -90,12 +91,12 @@ class Signup extends StatelessWidget {
       onSaved: (text) => _email = text,
     );
 
-    final passwordFormField = TextFormField(
+    var passwordFormField = TextFormField(
       style: style,
       decoration: InputDecoration(
           labelText: 'Password',
           contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-          //hintText: "Password",
+          hintText: "Password",
           border:
           OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
       validator: (text) {
@@ -112,34 +113,34 @@ class Signup extends StatelessWidget {
       onSaved: (text) => _password= text,
     );
 
-    final signUpButon = Material(
+    final signUpButton = Material(
       elevation: 3.0,
       borderRadius: BorderRadius.circular(30.0),
       color: Color.fromRGBO(140, 0, 75, 1),
       child: MaterialButton(
         minWidth: MediaQuery.of(context).size.width,
         padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-          onPressed: () async{
-            if (_key.currentState.validate()) {
-              _key.currentState.save();
-              var prov = Provider.of<LoginState>(context, listen: false);
-              var status= await prov.signUp(_name.trim(), _username.trim(), _email, _password);
-              print(status);
-                if(status==true) {
-                  var mensaje = "Hola, "+prov.getUserName();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Home(mensaje: mensaje),
-                    ),
-                  );
-                }else{
-                  print("fallo");
-                  prov.showAlert(context);
-                };
-              //Una forma correcta de llamar a otra pantalla
-            }
-          },
+        onPressed: () async{
+          if (_key.currentState.validate()) {
+            _key.currentState.save();
+            var prov = Provider.of<LoginState>(context, listen: false);
+            var status= await prov.signUp(_name.trim(), _username.trim(), _email, _password);
+            print(status);
+            if(status==true) {
+              var mensaje = "Hola, "+prov.getUserName();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Home(mensaje: mensaje),
+                ),
+              );
+            }else{
+              print("fallo");
+              prov.showAlert(context);
+            };
+            //Una forma correcta de llamar a otra pantalla
+          }
+        },
         child: Text("Sign up",
             textAlign: TextAlign.center,
             style: style.copyWith(
@@ -147,53 +148,58 @@ class Signup extends StatelessWidget {
       ),
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Camp Half-blood'),
-        backgroundColor: Color.fromRGBO(140, 0, 75, 1),
-      ),
-      body: Center(
-        child: Container(
-          color: Colors.white,
-          child: Padding(
-              padding: const EdgeInsets.all(36.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    SizedBox(
-                        height: 155.0,
-                        child: Icon(Icons.school,
-                          size: 150.0,
-                          color: Color.fromRGBO(140, 0, 75, 1),
-                        )
-                    ),
-                    SizedBox(height: 45.0),
-                    Form(
-                      key: _key,
-                      child: Column(
-                        children: <Widget>[
-                          nameField,
-                          SizedBox(height: 18.0),
-                          usernameField,
-                          SizedBox(height: 18.0),
-                          emailField,
-                          SizedBox(height: 18.0),
-                          passwordFormField,
-                        ],
+    return Material(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Camp Half-blood'),
+          backgroundColor: Color.fromRGBO(140, 0, 75, 1),
+        ),
+        body: SafeArea(
+          child: OrientationBuilder(
+            builder: (BuildContext context, Orientation orientation) {
+              return Container(
+                height: MediaQuery.of(context).size.height,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: ListView(
+                    children: <Widget>[
+                      Icon(Icons.school,
+                        size: orientation == Orientation.portrait ? 150.0 : 80.0,
+                        color: Color.fromRGBO(140, 0, 75, 1),
                       ),
-                    ),
-                    SizedBox(
-                      height: 35.0,
-                    ),
-                    signUpButon,
-                    SizedBox(
-                      height: 15.0,
-                    ),
-                  ],
+                      SizedBox(
+                        height: 30.0,
+                      ),
+                      Form(child: Column(
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: nameField,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: usernameField,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: emailField,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: passwordFormField,
+                          ),
+                          SizedBox(
+                            height: 35.0,
+                          ),
+                          signUpButton
+                        ],
+                      )
+                      ),
+                    ],
+                  ),
                 ),
-              )
+              );
+            },
           ),
         ),
       ),

@@ -16,6 +16,7 @@ class SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      color: Colors.white,
       child: Center(
           child: Icon(Icons.school,
             size: 200.0,
