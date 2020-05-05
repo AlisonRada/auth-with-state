@@ -153,28 +153,6 @@ class LoginState with ChangeNotifier {
         });
   }
 
-  checkTokenValidity() async {
-    final uri = "https://movil-api.herokuapp.com/check/token";
-    final response = await post(
-        uri, headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8',
-        HttpHeaders.authorizationHeader: "Bearer " + getToken(),
-      },
-    );
-    var jsonResponse = json.decode(response.body);
-    if(response.statusCode == 200){
-      if(!jsonResponse['valid']){
-        print("Token");
-        print(getToken());
-        print("El token no es válido");
-        print(getEmail());
-        print(getPassword());
-        login(getEmail(), getPassword());
-      } else{
-        print("El token sigue siendo válido válido");
-      }
-    }
-  }
-
   //Return false if user must sign in again or true if not.
   checkTokenValidity() async {
     final uri = "https://movil-api.herokuapp.com/check/token";
