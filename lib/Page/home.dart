@@ -1,15 +1,18 @@
+import 'package:authwithstate/model/Course.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../login_state.dart';
 import 'package:authwithstate/Page/login.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart';
 
 class Home extends StatelessWidget {
 
   final String mensaje;
-
-  const Home({Key key, @required this.mensaje}) : super(key: key);
-
+  Home({Key key, @required this.mensaje}) : super(key: key);
+  List<Course> courses = new List<Course>();
   @override
   Widget build(BuildContext context) {
 
@@ -71,6 +74,9 @@ class Home extends StatelessWidget {
       ),
     );
 
+    var prov = Provider.of<LoginState>(context, listen: false);
+    getCourses(prov.getUserName(), context);
+    print(courses.length);
 
     return Scaffold(
       appBar: AppBar(
@@ -82,10 +88,128 @@ class Home extends StatelessWidget {
           builder: (BuildContext context, LoginState value, Widget child) {
             return child;
           },
-          child: body,
+          child: _list(),
         ),
       ),
     );
   }
 
+  Widget _list(  ) {
+    return ListView.builder(
+      itemCount: courses.length,
+      itemBuilder: (context, posicion) {
+        var element = courses[posicion];
+        return _item(element, posicion, context);
+      },
+    );
+  }
+
+
+
+  Widget _item(Course element, int posicion, BuildContext context) {
+    return Dismissible(key: UniqueKey(),
+      onDismissed: (direction) {
+          courses.removeAt(posicion);
+      },
+      background: Container(color: Colors.red,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child:
+          Text("Deleting",
+              style: TextStyle(fontSize: 15, color: Colors.white)
+          ),
+        ),
+      ),
+      child: Container(
+        padding: new EdgeInsets.all(7.0),
+        height: 100,
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5.0),
+          ),
+          color: element.completed == 1 ? Colors.blueGrey : Colors.white70,
+          child: Center(
+            child: ListTile(
+              leading: Icon(Icons.account_box, size: 45.0),
+              title: Text(element.id.toString(), style: TextStyle(fontWeight: FontWeight.bold),),
+              subtitle: Text(element.name),
+              isThreeLine: true,
+              onTap: ()=>_onTap(context, element, posicion),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  void _onTap(BuildContext context, Course location, int posicion ) {
+    if (courses[posicion].completed == 0) {
+      courses[posicion].completed = 1;
+    } else{
+      courses[posicion].completed = 0;
+    }
+  }
+
+  addCourse(String user, BuildContext context) async {
+    final uri = "https://movil-api.herokuapp.com/"+user+"/courses";
+    final response = await post(
+      uri, headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      HttpHeaders.authorizationHeader: "Bearer " +
+          Provider.of<LoginState>(context, listen: false).getToken(),
+    },);
+    var jsonResponse = json.decode(response.body);
+    if (response.statusCode == 200) {
+      if (!jsonResponse == null) {
+        int id = int.parse(jsonResponse['id'].toString());
+        String name = jsonResponse['name'].toString();
+        String professor = jsonResponse['professor'].toString();
+        int students= int.parse(jsonResponse['students'].toString());
+        int completed=0;
+        Course course= new Course(id: id, name: name, professor: professor,
+            students:students, completed: completed);
+        courses.add(course);
+      }
+    }else{
+      String message = jsonResponse['error'];
+      print("Respuesta");
+      print(jsonResponse);
+      return null;
+    }
+  }
+  getCourses(String user, BuildContext context) async {
+    final uri = "https://movil-api.herokuapp.com/"+user+"/courses";
+    final response = await get(
+      uri, headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      HttpHeaders.authorizationHeader: "Bearer " +
+          Provider.of<LoginState>(context, listen: false).getToken(),
+    },);
+    var jsonResponse = json.decode(response.body);
+    print("json");
+    print(jsonResponse[0]);
+    if (response.statusCode == 200) {
+      for(Map i in jsonResponse){
+        Course cr = new Course(id: int.parse(i["id"]),name: i["name"],
+        professor: i["professor"], students: int.parse(i["students"]),
+            completed: 0);
+        courses.add(cr);
+        print(cr);
+      }
+    }else{
+      String message = jsonResponse['error'];
+      print("Respuesta");
+      print(jsonResponse);
+      return null;
+    }
+  }
+
 }
+
+
+
+
+
+
+
