@@ -124,9 +124,9 @@ class Signup extends StatelessWidget {
           if (_key.currentState.validate()) {
             _key.currentState.save();
             var prov = Provider.of<LoginState>(context, listen: false);
-            var status= await prov.signUp(_name.trim(), _username.trim(), _email, _password);
+            var status= await prov.signUp( _email, _password, _username.trim(),_name.trim());
             print(status);
-            if(status==true) {
+            if(status) {
               var mensaje = "Hola, "+prov.getUserName();
               Navigator.push(
                 context,

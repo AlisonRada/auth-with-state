@@ -6,18 +6,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginState with ChangeNotifier {
 
+  SharedPreferences prefs;
+
   bool _loggedIn, _loaded = false;
   String _email, _password, _name, _username, _token;
   String _message;
   bool isLoggedIn() => _loggedIn ?? false;
   bool isLoaded() => _loaded ?? false;
-  String getEmail() => _email;
-  String getPassword() => _password;
-  String getName() => _name;
-  String getUserName() => _username;
-  String getToken() => _token;
+  String getEmail() => _email ?? "";
+  String getPassword() => _password ?? "";
+  String getName() => _name ?? "";
+  String getUserName() => prefs.getString("username") ?? "";
+  String getToken() => _token ?? "";
 
-  SharedPreferences prefs;
+
 
   update() async{
     prefs = await SharedPreferences.getInstance();
@@ -67,6 +69,8 @@ class LoginState with ChangeNotifier {
     prefs = await SharedPreferences.getInstance();
     prefs.setString("email", null);
     prefs.setString("password", null);
+    prefs.setString("name", null);
+    prefs.setString("username", null);
     prefs.setBool("loggedIn", false);
     update();
   }
@@ -80,7 +84,7 @@ class LoginState with ChangeNotifier {
     notifyListeners();
   }
 
-  signUp(name, username, email, password) async {
+  signUp(email, password, username, name) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     _name = name;
     _username = username;
@@ -93,8 +97,8 @@ class LoginState with ChangeNotifier {
       'name': _name
     };
     var response = await post("https://movil-api.herokuapp.com/signup", body: data);
+    print(response.statusCode);
     var jsonResponse = json.decode(response.body);
-    _message = jsonResponse['error'];
     if (response.statusCode == 200) {
       if (jsonResponse != null) {
         _loggedIn = true;
@@ -108,7 +112,10 @@ class LoginState with ChangeNotifier {
       //update();
 
     }else{
+      _message = jsonResponse['error'];
       _loggedIn=false;
+      print("Respuesta");
+      print(jsonResponse);
     }
     notifyListeners();
     return _loggedIn;
