@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
@@ -8,17 +9,19 @@ class LoginState with ChangeNotifier {
 
   SharedPreferences prefs;
 
-  bool _loggedIn, _loaded = false;
+  bool _loggedIn, _loaded = false, _rememberMe = false;
   String _email, _password, _name, _username, _token;
   String _message;
   bool isLoggedIn() => _loggedIn ?? false;
   bool isLoaded() => _loaded ?? false;
+  bool isRemembered() => _rememberMe;
   String getEmail() => _email ?? "";
   String getPassword() => _password ?? "";
   String getName() => _name ?? "";
   String getUserName() => prefs.getString("username") ?? "";
-  String getToken() => _token ?? "";
+  String getToken() => prefs.getString("token") ?? "";
 
+  void setRemember(value) => _rememberMe = value;
 
 
   update() async{
@@ -39,6 +42,7 @@ class LoginState with ChangeNotifier {
       'password': _password
     };
     var response = await post("https://movil-api.herokuapp.com/signin", body: data);
+    print("Login status code: ");
     print(response.statusCode);
     var jsonResponse = json.decode(response.body);
     _message = jsonResponse['error'];
@@ -49,10 +53,14 @@ class LoginState with ChangeNotifier {
         prefs.setString("name", jsonResponse['name']);
         prefs.setString("email", jsonResponse['email']);
         prefs.setString("token", jsonResponse['token']);
+        prefs.setString("password", password);
         prefs.setBool("loggedIn", _loggedIn);
+        print("Nuevo token");
+        print(prefs.getString("token"));
         update();
       };
     }else{
+      print(jsonResponse);
       _loggedIn=false;
     }
     notifyListeners();
@@ -146,4 +154,35 @@ class LoginState with ChangeNotifier {
   }
 
 
+  //Return false if user must sign in again or true if not.
+  checkTokenValidity() async {
+    final uri = "https://movil-api.herokuapp.com/check/token";
+    final response = await post(
+        uri, headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8',
+        HttpHeaders.authorizationHeader: "Bearer " + getToken(),
+      },
+    );
+    var jsonResponse = json.decode(response.body);
+    if(response.statusCode == 200){
+      if(!jsonResponse['valid']){
+        //Marco la opción recordado así que solicito otro token
+        if(_rememberMe){
+          print("Token");
+          print(getToken());
+          print("El token no es válido");
+          print(getEmail());
+          print(getPassword());
+          login(getEmail(), getPassword());
+          return true;
+        } else{
+          //Necesita iniciar manualmente para obtener otro token
+          _message = "Su periodo expiró, debe volver a iniciar sesión.";
+          return false;
+        }
+      } else{
+        print("El token sigue siendo válido válido");
+        return true;
+      }
+    }
+  }
 }
