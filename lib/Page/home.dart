@@ -10,11 +10,11 @@ import 'package:http/http.dart';
 
 class Home extends StatelessWidget {
 
-  final String mensaje;
-  Home({Key key, @required this.mensaje}) : super(key: key);
   List<Course> courses = new List<Course>();
-  @override
-  Widget build(BuildContext context) {
+  final String mensaje;
+
+  Home({Key key, @required this.mensaje}) : super(key: key);
+  Widget no(BuildContext context) {
 
     final welcome = Padding(
       padding: EdgeInsets.all(8.0),
@@ -35,12 +35,12 @@ class Home extends StatelessWidget {
     final home_btn = RaisedButton(
       child: Container(
         decoration: BoxDecoration(
-            gradient: new LinearGradient(
-              begin: Alignment.centerLeft,
-              end: new Alignment(1.0, 0.0), // 10% of the width, so there are ten blinds.
-              colors: [Colors.white, Colors.pinkAccent], // whitish to gray
-              tileMode: TileMode.repeated, // repeats the gradient over the canvas
-            ),
+          gradient: new LinearGradient(
+            begin: Alignment.centerLeft,
+            end: new Alignment(1.0, 0.0), // 10% of the width, so there are ten blinds.
+            colors: [Colors.white, Colors.pinkAccent], // whitish to gray
+            tileMode: TileMode.repeated, // repeats the gradient over the canvas
+          ),
         ),
         padding: const EdgeInsets.all(10.0),
         child: const Text(
@@ -74,10 +74,6 @@ class Home extends StatelessWidget {
       ),
     );
 
-    var prov = Provider.of<LoginState>(context, listen: false);
-    getCourses(prov.getUserName(), context);
-    print(courses.length);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Camp Half-blood'),
@@ -88,28 +84,114 @@ class Home extends StatelessWidget {
           builder: (BuildContext context, LoginState value, Widget child) {
             return child;
           },
-          child: _list(),
+          child: body,//_list(context),
         ),
       ),
     );
   }
 
-  Widget _list(  ) {
-    return ListView.builder(
-      itemCount: courses.length,
-      itemBuilder: (context, posicion) {
-        var element = courses[posicion];
-        return _item(element, posicion, context);
-      },
-    );
+  Future <List<Course>> getCoursesList (BuildContext context) async {
+    var prov = Provider.of<LoginState>(context, listen: false);
+    prov.getCourses();
+    if(prov.already()){
+      print('already: '+prov.already().toString());
+      prov.setAlready();
+      courses.clear();
+      List<Course> courses_ = prov.getCoursesList();
+      courses.addAll(courses_);
+    }
+    return courses;
   }
 
+  @override
+  Widget build(BuildContext context) {
 
+    final home_btn = RaisedButton(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: new LinearGradient(
+            begin: Alignment.centerLeft,
+            end: new Alignment(1.0, 0.0), // 10% of the width, so there are ten blinds.
+            colors: [Colors.white, Colors.pinkAccent], // whitish to gray
+            tileMode: TileMode.repeated, // repeats the gradient over the canvas
+          ),
+        ),
+        padding: const EdgeInsets.all(10.0),
+        child: const Text(
+            'Logout',
+            style: TextStyle(fontSize: 20)
+        ),
+      ),
+      textColor: Colors.white,
+      onPressed: () async {
+        Provider.of<LoginState>(context, listen: false).logout();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Login(),
+          ),
+        );
+      },
+    );
+
+    var prov = Provider.of<LoginState>(context, listen: false);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Camp Half-blood'),
+        backgroundColor: Color.fromRGBO(140, 0, 75, 1),
+      ),
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: FutureBuilder(
+              future: getCoursesList(context),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return ListView.builder(
+                    itemCount: snapshot.data.length,
+                    itemBuilder: (context, index) {
+                      var element = snapshot.data[index];
+                      return _item(element, index, context);
+                    },
+                  );
+                } else {
+                  return Container(
+                    child: Center(
+                      child: Text('Loading'),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Center(
+                  child: home_btn,
+                ),
+              ),
+              SizedBox(
+                height: 10.0,
+              )
+            ],
+          ),
+        ],
+      ),
+      floatingActionButton: new FloatingActionButton(
+          onPressed: (){
+            prov.addCourse(context);
+          },
+          tooltip: 'Create course',
+          child: new Icon(Icons.add)
+      ),
+    );
+  }
 
   Widget _item(Course element, int posicion, BuildContext context) {
     return Dismissible(key: UniqueKey(),
       onDismissed: (direction) {
-          courses.removeAt(posicion);
+        //courses.removeAt(posicion);
       },
       background: Container(color: Colors.red,
         child: Align(
@@ -144,72 +226,11 @@ class Home extends StatelessWidget {
 
 
   void _onTap(BuildContext context, Course location, int posicion ) {
-    if (courses[posicion].completed == 0) {
+    /*if (courses[posicion].completed == 0) {
       courses[posicion].completed = 1;
     } else{
       courses[posicion].completed = 0;
-    }
-  }
-
-  addCourse(String user, BuildContext context) async {
-    final uri = "https://movil-api.herokuapp.com/"+user+"/courses";
-    final response = await post(
-      uri, headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      HttpHeaders.authorizationHeader: "Bearer " +
-          Provider.of<LoginState>(context, listen: false).getToken(),
-    },);
-    var jsonResponse = json.decode(response.body);
-    if (response.statusCode == 200) {
-      if (!jsonResponse == null) {
-        int id = int.parse(jsonResponse['id'].toString());
-        String name = jsonResponse['name'].toString();
-        String professor = jsonResponse['professor'].toString();
-        int students= int.parse(jsonResponse['students'].toString());
-        int completed=0;
-        Course course= new Course(id: id, name: name, professor: professor,
-            students:students, completed: completed);
-        courses.add(course);
-      }
-    }else{
-      String message = jsonResponse['error'];
-      print("Respuesta");
-      print(jsonResponse);
-      return null;
-    }
-  }
-  getCourses(String user, BuildContext context) async {
-    final uri = "https://movil-api.herokuapp.com/"+user+"/courses";
-    final response = await get(
-      uri, headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      HttpHeaders.authorizationHeader: "Bearer " +
-          Provider.of<LoginState>(context, listen: false).getToken(),
-    },);
-    var jsonResponse = json.decode(response.body);
-    print("json");
-    print(jsonResponse[0]);
-    if (response.statusCode == 200) {
-      for(Map i in jsonResponse){
-        Course cr = new Course(id: int.parse(i["id"]),name: i["name"],
-        professor: i["professor"], students: int.parse(i["students"]),
-            completed: 0);
-        courses.add(cr);
-        print(cr);
-      }
-    }else{
-      String message = jsonResponse['error'];
-      print("Respuesta");
-      print(jsonResponse);
-      return null;
-    }
+    }*/
   }
 
 }
-
-
-
-
-
-
-

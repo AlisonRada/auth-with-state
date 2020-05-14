@@ -1,7 +1,7 @@
+import 'package:authwithstate/Page/courses.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:provider/provider.dart';
-import 'package:authwithstate/Page/home.dart';
 import '../login_state.dart';
 import 'signup.dart';
 
@@ -31,6 +31,7 @@ class LoginForm extends StatefulWidget {
     return LoginFormState();
   }
 }
+
 class LoginFormState extends State<LoginForm> {
   TextStyle style = TextStyle(fontFamily: 'Montserrat', fontSize: 20.0);
 
@@ -42,10 +43,29 @@ class LoginFormState extends State<LoginForm> {
 
   GlobalKey<FormState> _key = GlobalKey();
 
-  String _email;
-  String _password;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   bool rememberMe = false;
+
+  @override
+  void initState(){
+    final prov = Provider.of<LoginState>(context, listen: false);
+    if(prov.isRemembered()){
+      emailController.text = prov.getEmail();
+      passwordController.text = prov.getPassword();
+      rememberMe = true;
+    }
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is removed from the widget tree
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +83,7 @@ class LoginFormState extends State<LoginForm> {
       maxLength: 50,
       obscureText: false,
       style: style,
+      controller: emailController,
       decoration: InputDecoration(
           counterText: '',
           labelText: 'Email',
@@ -70,11 +91,11 @@ class LoginFormState extends State<LoginForm> {
           //hintText: "Email",
           border:
           OutlineInputBorder(borderRadius: BorderRadius.circular(32.0))),
-      onSaved: (text) => _email = text,
     );
 
     final passwordFormField = TextFormField(
       style: style,
+      controller: passwordController,
       decoration: InputDecoration(
           labelText: 'Password',
           contentPadding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
@@ -92,7 +113,6 @@ class LoginFormState extends State<LoginForm> {
         return null;
       },
       obscureText: true,
-      onSaved: (text) => _password= text,
     );
 
     return Material(
@@ -140,18 +160,17 @@ class LoginFormState extends State<LoginForm> {
                                       if (_key.currentState.validate()) {
                                         _key.currentState.save();
                                         var prov = Provider.of<LoginState>(context, listen: false);
-                                        var status= await prov.login(_email, _password);
-                                        print(status);
+                                        prov.setRemember(rememberMe);
+                                        var status= await prov.login(emailController.text, passwordController.text);
                                         if(status==true) {
                                           var mensaje = "Hola, "+prov.getUserName();
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => Home(mensaje: mensaje),
+                                              builder: (context) => CoursesView(),
                                             ),
                                           );
                                         }else{
-                                          print("fallo");
                                           prov.showAlert(context);
                                         };
                                       }
@@ -166,15 +185,13 @@ class LoginFormState extends State<LoginForm> {
                             ),
                             Row(
                               children: <Widget>[
-                                Checkbox(
-                                  value: rememberMe,
-                                  activeColor: Color.fromRGBO(140, 0, 75, 1),
-                                  checkColor: Colors.white,
-                                  onChanged: (value){
-                                    var prov = Provider.of<LoginState>(context, listen: false);
-                                    prov.setRemember(value);
-                                  }
-                                ),
+                                Checkbox(value: rememberMe,
+                                    activeColor: Color.fromRGBO(140, 0, 75, 1),
+                                    onChanged:(bool newValue) {
+                                      setState(() {
+                                        rememberMe = newValue;
+                                      });
+                                    }),
                                 Text(
                                   'Remember me',
                                   style: TextStyle(
@@ -205,8 +222,8 @@ class LoginFormState extends State<LoginForm> {
                               ],
                             ),
                           ],
-                    ),
-                  )
+                        ),
+                      )
 
                     ],
                   ),
