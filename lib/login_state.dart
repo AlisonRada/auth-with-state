@@ -5,30 +5,38 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'model/Course.dart';
+
 class LoginState with ChangeNotifier {
 
   SharedPreferences prefs;
 
-  bool _loggedIn, _loaded = false, _rememberMe = false;
+  List<Course> courses = new List<Course>();
+
+  bool _loggedIn, _loaded = false, _rememberMe = false, _needList = true, _already = false;
   String _email, _password, _name, _username, _token;
   String _message;
   bool isLoggedIn() => _loggedIn ?? false;
   bool isLoaded() => _loaded ?? false;
   bool isRemembered() => _rememberMe;
+  bool needList()=> _needList;
+  bool already() => _already;
   String getEmail() => _email ?? "";
   String getPassword() => _password ?? "";
   String getName() => _name ?? "";
   String getUserName() => prefs.getString("username") ?? "";
   String getToken() => prefs.getString("token") ?? "";
 
+  List<Course> getCoursesList() => courses;
+
   void setRemember(value) => _rememberMe = value;
+  void setAlready() => _already = !_already;
 
 
   update() async{
     prefs = await SharedPreferences.getInstance();
     _username = prefs.getString("username");
     _name = prefs.getString("name");
-    _email = prefs.getString("email");
     _token = prefs.getString("token");
     _loggedIn = prefs.getBool("loggedIn");
   }
@@ -42,10 +50,8 @@ class LoginState with ChangeNotifier {
       'password': _password
     };
     var response = await post("https://movil-api.herokuapp.com/signin", body: data);
-    print("Login status code: ");
-    print(response.statusCode);
+    print("Login status code: "+response.statusCode.toString());
     var jsonResponse = json.decode(response.body);
-    _message = jsonResponse['error'];
     if (response.statusCode == 200) {
       if (jsonResponse != null) {
         _loggedIn = true;
@@ -60,7 +66,7 @@ class LoginState with ChangeNotifier {
         update();
       };
     }else{
-      print(jsonResponse);
+      _message = jsonResponse['error'];
       _loggedIn=false;
     }
     notifyListeners();
@@ -117,8 +123,6 @@ class LoginState with ChangeNotifier {
         sharedPreferences.setBool("loggedIn", _loggedIn);
         update();
       };
-      //update();
-
     }else{
       _message = jsonResponse['error'];
       _loggedIn=false;
@@ -133,7 +137,11 @@ class LoginState with ChangeNotifier {
     var alert = new AlertDialog(
       content: Container(
         child: Row(
-          children: <Widget>[Text(_message)],
+          children: <Widget>[
+            Expanded(
+                child: Text(_message)
+            )
+          ],
         ),
       ),
       actions: <Widget>[
@@ -157,9 +165,9 @@ class LoginState with ChangeNotifier {
   checkTokenValidity() async {
     final uri = "https://movil-api.herokuapp.com/check/token";
     final response = await post(
-        uri, headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8',
-        HttpHeaders.authorizationHeader: "Bearer " + getToken(),
-      },
+      uri, headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8',
+      HttpHeaders.authorizationHeader: "Bearer " + getToken(),
+    },
     );
     var jsonResponse = json.decode(response.body);
     if(response.statusCode == 200){
@@ -182,6 +190,65 @@ class LoginState with ChangeNotifier {
         print("El token sigue siendo válido válido");
         return true;
       }
+    }
+  }
+
+  getCourses() async {
+    var user = "martha1";//getUserName();
+    if(_needList){
+      courses.clear();
+      _needList = false;
+      final uri = "https://movil-api.herokuapp.com/"+user+"/courses";
+      final response = await get(
+        uri, headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        HttpHeaders.authorizationHeader: "Bearer " +
+            getToken(),
+      },);
+      var jsonResponse = json.decode(response.body);
+      if (response.statusCode == 200) {
+        for(Map i in jsonResponse){
+          Course cr = new Course(id: int.parse(i["id"].toString()),name: i["name"],
+              professor: i["professor"], students: int.parse(i["students"].toString()),
+              completed: 0);
+          courses.add(cr);
+          //print(cr.name);
+        }
+      }else{
+        String message = jsonResponse['error'];
+        print("Respuesta");
+        print(jsonResponse);
+        return null;
+      }
+      _already = true;
+    }
+  }
+
+  addCourse(BuildContext context) async {
+    var user = _username;
+    final uri = "https://movil-api.herokuapp.com/"+user+"/courses";
+    final response = await post(
+      uri, headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      HttpHeaders.authorizationHeader: "Bearer " +
+          getToken(),
+    },);
+    var jsonResponse = json.decode(response.body);
+    if (response.statusCode == 200) {
+      int id = int.parse(jsonResponse['id'].toString());
+      String name = jsonResponse['name'].toString();
+      String professor = jsonResponse['professor'].toString();
+      int students= int.parse(jsonResponse['students'].toString());
+      int completed=0;
+      Course course= new Course(id: id, name: name, professor: professor,
+          students:students, completed: completed);
+      courses.add(course);
+      setAlready();
+      print('new size: '+courses.length.toString());
+    }else{
+      String message = jsonResponse['error'];
+      print("Respuesta");
+      print(jsonResponse);
     }
   }
 }

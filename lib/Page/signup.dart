@@ -172,29 +172,29 @@ class Signup extends StatelessWidget {
                       ),
                       Form(key: _key,
                           child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: nameField,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: usernameField,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: emailField,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: passwordFormField,
-                          ),
-                          SizedBox(
-                            height: 35.0,
-                          ),
-                          signUpButton
-                        ],
-                      )
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: nameField,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: usernameField,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: emailField,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: passwordFormField,
+                              ),
+                              SizedBox(
+                                height: 35.0,
+                              ),
+                              signUpButton
+                            ],
+                          )
                       ),
                     ],
                   ),

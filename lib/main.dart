@@ -1,3 +1,4 @@
+import 'package:authwithstate/Page/courses.dart';
 import 'package:authwithstate/Page/home.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
             state.update();
             if (state.isLoaded()) {
               if (state.isLoggedIn()) {
-                return Home();
+                return CoursesView();//Home();
               } else {
                 return Login();
               }
